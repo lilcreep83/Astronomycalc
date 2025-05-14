@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moon Phase Calculator</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+        }
+        #date-input {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        #calculate-button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #calculate-button:hover {
+            background-color: #0056b3;
+        }
+        #result {
+            font-size: 1.2em;
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Moon Phase Calculator</h1>
+
+    <label for="date-input">Select a Date:</label>
+    <input type="date" id="date-input">
+
+    <button id="calculate-button">Calculate Moon Phase</button>
+
+    <div id="result"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const dateInput = document.getElementById('date-input');
+            const calculateButton = document.getElementById('calculate-button');
+            const resultDiv = document.getElementById('result');
+
+            calculateButton.addEventListener('click', function() {
+                const selectedDate = new Date(dateInput.value);
+                if (isNaN(selectedDate)) {
+                    resultDiv.textContent = "Please select a valid date.";
+                    return;
+                }
+
+                const moonPhase = calculateMoonPhase(selectedDate);
+                resultDiv.textContent = `The moon phase on ${selectedDate.toDateString()} is: ${moonPhase}`;
+            });
+
+            function calculateMoonPhase(date) {
+                // Algorithm based on Meeus's astronomical algorithms
+
+                const k1 = Math.floor(date.getFullYear() / 100);
+                const k2 = date.getFullYear() - 100 * k1;
+                const k3 = Math.floor((14 + 8 * k1) / 25);
+                const k4 = date.getFullYear() - 100 * k1 + k3;
+                const k5 = Math.floor(365.25 * k4);
+                const k6 = Math.floor(30.6001 * (date.getMonth() + 1 + 1));
+                const jd = k5 + k6 + date.getDate() + 1720994.5;
+
+                const D = jd - 2451549.5;
+                const g = (357.529 + 0.98560028 * D) % 360;
+                const q = (280.160 + 0.98564736 * D) % 360;
+                const L = (q + 6.289 * Math.sin(toRadians(g)) + 0.210 * Math.sin(toRadians(2 * g)) + 0.011 * Math.sin(toRadians(3 * g))) % 360;
+                const e = 0.016708 - 0.00004204 * D - 0.0000001236 * D * D;
+                const V = L - 0.00569 - 0.00478 * Math.sin(toRadians(125.04 - 0.0529539 * D)) + 0.0019 * Math.sin(toRadians(2 * q)) + 0.0002 * Math.sin(toRadians(g));
+                const i = 5.1287 - 0.002496 * D;
+                const N = (125.04 - 0.0529539 * D) % 360;
+                const w = (318.063 + 0.1643573 * D) % 360;
+
+                const x = Math.cos(toRadians(V));
+                const y = Math.sin(toRadians(V)) * Math.cos(toRadians(i));
+                const z = Math.sin(toRadians(V)) * Math.sin(toRadians(i));
+
+                const xeq = x;
+                const yeq = y * Math.cos(toRadians(N)) - z * Math.sin(toRadians(N));
+                const zeq = y * Math.sin(toRadians(N)) + z * Math.cos(toRadians(N));
+
+                const lambdamoon = toDegrees(Math.atan2(yeq, xeq)) % 360;
+                const betamoon = toDegrees(Math.asin(zeq));
+
+                const phase = (lambdamoon - q + 180) % 360 / 180;
+
+                if (phase < 0.0625) {
+                    return "New Moon";
+                } else if (phase < 0.1875) {
+                    return "Waxing Crescent";
+                } else if (phase < 0.3125) {
+                    return "First Quarter";
+                } else if (phase < 0.4375) {
+                    return "Waxing Gibbous";
+                } else if (phase < 0.5625) {
+                    return "Full Moon";
+                } else if (phase < 0.6875) {
+                    return "Waning Gibbous";
+                } else if (phase < 0.8125) {
+                    return "Third Quarter";
+                } else if (phase < 0.9375) {
+                    return "Waning Crescent";
+                } else {
+                    return "New Moon";
+                }
+            }
+
+            function toRadians(degrees) {
+                return degrees * Math.PI / 180;
+            }
+
+            function toDegrees(radians) {
+                return radians * 180 / Math.PI;
+            }
+        });
+    </script>
+</body>
+</html>
